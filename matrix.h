@@ -10,23 +10,30 @@ class Matrix {
 	/*	Matrix Class
 	*	Basic matrix operations and solving linear equations.
 	*/
-	T *data; //entries of the matrix
 	public:
-	int rows, cols;
 	
 	//special memebers
 	Matrix(int,int);
 	~Matrix();
+	
 	//access
 	T operator() (int row, int col) const; //retrieving elements
 	void set_element(T, int, int); //setting elements
 	void set_element(T, int); //linear indexing
+	int get_rows() const;
+	int get_cols() const;
 	
 	//algebra
-	Matrix<T> operator+ (const Matrix& other);
-	Matrix<T> operator- ();
-	Matrix<T> operator* (const Matrix& other);
+	Matrix<T> operator+ (const Matrix& other) const;
+	Matrix<T> operator- () const;
+	Matrix<T> operator* (const Matrix& other) const;
 	
+	//other
+	void show();
+	
+	private:
+	T *data; //entries of the matrix
+	const int rows, cols;
 }; //class Matrix
 
 template<class T>
@@ -82,7 +89,17 @@ void Matrix<T>::set_element(T val, int idx) {
 } //Matrix set_element
 
 template<class T>
-Matrix<T> Matrix<T>::operator+ (const Matrix<T>& other) {
+int Matrix<T>::get_rows() const {
+	return this->rows;
+}
+
+template<class T>
+int Matrix<T>::get_cols() const {
+	return this->cols;
+}
+
+template<class T>
+Matrix<T> Matrix<T>::operator+ (const Matrix<T>& other) const {
 	/* Matrix addition.
 	Direct computation by definition.
 	Operation cost: O(n^2). (for A_(nk)+B_(nk), Cost=O(nk))
@@ -106,7 +123,20 @@ Matrix<T> Matrix<T>::operator+ (const Matrix<T>& other) {
 } //Matrix addition
 
 template<class T>
-Matrix<T> Matrix<T>::operator- () {
+void Matrix<T>::show() {
+	/* Print the matrix on the console
+	*/	
+	int row, col;
+	for(row = 0; row < rows; row++) {
+		for(col = 0; col < cols; col++) {
+			std::cout << this->operator()(row,col) << " ";
+		}
+		std::cout << std::endl;
+	}
+} //matrix show
+
+template<class T>
+Matrix<T> Matrix<T>::operator- () const {
 	/* Negative of a matrix.
 	Direct computation by definition.
 	Operation cost: O(n^2). (for A_(nk), Cost=O(nk))
@@ -124,7 +154,7 @@ Matrix<T> Matrix<T>::operator- () {
 } //Matrix negative
 
 template<class T>
-Matrix<T> Matrix<T>::operator* (const Matrix& other) {
+Matrix<T> Matrix<T>::operator* (const Matrix& other) const {
 	/* Matrix multiplication.
 	Direct computation by definition.
 	Operation cost: O(n^3). (for A_(nk)*B_(kj), Cost=O(nkj))
@@ -166,15 +196,33 @@ Matrix<T> identity(int n, T val = 1) {
 }
 
 template<class T>
-Matrix<T> gaussian_elim() {
-	#ifndef MAT this->operator()
-	#define MAT this->operator()
-	T elem = MAT(1,1);
-	T factor = MAT(2,1) / elem;
-	int row, col;
-	for(col=0; col < cols; col++) {
+Matrix<T> gaussian_elim(Matrix<T> coeffs, Matrix<T> rhs) {
+	/*	Solve for x in coeffs*x=rhs.
+	*/
+	int rows = coeffs.get_rows();
+	int cols = coeffs.get_cols();
+	if(rows != cols || rhs.get_cols() != 1 || rhs.get_rows() != rows) throw std::exception();
+	Matrix<T> augm(rows,cols+1); //augmented matrix produced
+	
+	int row, col, val; //dummy vars
 		
+	for(col=0; col < cols; col++) {
+		//fill the first row
+		val = coeffs(0,col);
+		augm.set_element(val,0,col);
 	}
-	#endif
+	std::cout << rhs(0,0) <<std::endl;
+	augm.set_element(rhs(0,0),0,cols);
+	
+	
+	T factor = coeffs(1,0) / coeffs(0,0);
+	for(col=0; col < cols; col++) {
+		//eliminate the second row
+		val = coeffs(1,col) - factor * coeffs(0,col);
+		augm.set_element(val,1,col);
+	}
+	val = rhs(1,0) - factor * rhs(0,0);
+	augm.set_element(val,1,cols); //augmented part elimination
+	return augm;
 }
 #endif //header guard
