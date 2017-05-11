@@ -21,6 +21,9 @@ int main() {
 	std::cout << m2(0,0) << " " << m2(0,1) << std::endl << m2(1,0) << " " << m2(1,1) << std::endl << std::endl;
 	std::cout << m3(0,0) << " " << m3(0,1) << std::endl << m3(1,0) << " " << m3(1,1) << std::endl << std::endl;
 	std::cout << m4(0,0) << " " << m4(0,1) << std::endl << m4(1,0) << " " << m4(1,1) << std::endl << std::endl;
+	
+	Matrix<double> m5 = identity<double>(2);
+	std::cout << m5(0,0) << " " << m5(0,1) << std::endl << m5(1,0) << " " << m5(1,1) << std::endl << std::endl;
 	//pause program
 	char c;
 	std::cin >> c;
