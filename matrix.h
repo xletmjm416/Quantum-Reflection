@@ -219,6 +219,20 @@ Matrix<T> augment(const Matrix<T> &A, const Matrix<T> &B) {
 }	//augment
 
 template<class T>
+Matrix<T> three_point_diff(int n){
+	/*Creates a tridiagonal matrix for three-point difference algorithm.*/
+	Matrix<T> ans(n,n);
+	int row, col;
+	for(col = 0; col < n; col++) {
+		for(row = 0; row < n; row++) {
+			if (row == col) ans.set_element(val,row,col);
+			else ans.set_element(0,row,col);
+		}
+	}
+	return ans;
+}
+
+template<class T>
 Matrix<T> gauss_elim(const Matrix<T> &coeffs, const Matrix<T> &rhs) {
 	/*	Solve for x in coeffs*x=rhs.
 	*/
@@ -229,37 +243,43 @@ Matrix<T> gauss_elim(const Matrix<T> &coeffs, const Matrix<T> &rhs) {
 	int cols = aug.get_cols();
 
 	//forward elimination
-	
-	#define PEEK(info, x) std::cout << info << x << std::endl;
 	T pivot, factor, val;
-	int piv_row = 0; //pivot's row
-	for(int sweep=0; sweep < cols; sweep++) {
-		//sweeps the row searching for pivot (leftmost non-zero term);
+	int piv_row = 0, piv_col=0; //pivot's row
+	//int row=0;
+	for(int row=0; row<rows; row++) {
+	#define PEEK(info, x) std::cout << info << x << std::endl;
+	piv_row = row;
+	for(int sweep=0; sweep < cols-1; sweep++) {
+		//sweeps the row searching for pivot (leftmost non-zero term); cols-1 to not pivot rhs column
 		val = aug(piv_row,sweep);
-		if(val==0) continue;
-		else { pivot = val; pivot_col=sweep; break; }
+		if(val < 1e-10 && val > -1e-10) continue;
+		else { pivot = val; piv_col=sweep; break; }
 	}
-	if(pivot == 0) throw std::exception();
+	if(pivot == 0) {
+		throw std::exception();
+	}
 	PEEK("pivot ", pivot)
+	PEEK("pivot row ", piv_row)
+	PEEK("pivot col ", piv_col)
 	for(int fwd=0; fwd < rows; fwd++) {
+		if(fwd == piv_row) continue; //no normalisation of rows yet
 		PEEK("fwd ", fwd)
 		T factor = aug(fwd, piv_col) / pivot; //TODO if not zero
+		if(factor==0) continue; //well no need for multiplying for nothing
 		PEEK("factor ", factor)
 		for(int col=0; col < cols; col++) {
 			//update consecutive rows column by column
 			//eliminate with the pivot
-			if(fwd == piv_row) {
-			//normalise the pivot's row
-				val = aug(fwd, col) / pivot;
-				aug.set_element(val, fwd, col);
-			}
-			else {
-				val = aug(fwd, col) - factor * aug(piv_row,col);
-				PEEK("val ", val)
-				aug.set_element(val, fwd, col);
-			}
+			val = aug(fwd, col) - factor * aug(piv_row, col);
+			PEEK("val ", val)
+			aug.set_element(val, fwd, col);
 		}
 	}
+	//The matrix of coefficients should be diagonal now!
+	
+	aug.show();
+	}
+	
 
 	return aug;
 } //gauss elim
