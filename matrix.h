@@ -50,7 +50,7 @@ Matrix<T>::Matrix(int r, int c) : rows(r), cols(c) {
 template<class T>
 Matrix<T>::~Matrix() {
 	/* Matrix destructor */
-	delete this->data;
+	delete [] this->data;
 }
 
 template<class T>
@@ -62,7 +62,7 @@ T Matrix<T>::operator() (int row, int col) const {
 		//reading outside of matrix
 		throw std::exception();
 		}
-	return *(this->data+col+row*rows);
+	return *(this->data+col+row*cols);
 } //Matrix operator()
 
 template<class T>
@@ -70,7 +70,7 @@ void Matrix<T>::set_element(T val, int row, int col) {
 	/*Set element "(row,col)" to value "val" in the matrix.*/
 	if(row > this->rows || col > this->cols || col < 0 || row < 0) throw std::exception();
 	else {
-		T *ptr = (T*)((this->data)+col+row*rows);
+		T *ptr = &( (this->data)[col+row*(this->cols)] );
 		//elements are arranged for 3x3 matrix: 00 01 02 10 11 12 20 21 22
 		*ptr = val;
 		return;
@@ -126,11 +126,9 @@ template<class T>
 void Matrix<T>::show() {
 	/* Print the matrix on the console
 	*/
-	Matrix<T> M = *this;
-	int row, col;
-	for(row = 0; row < M.rows; row++) {
-		for(col = 0; col < M.cols; col++) {
-			std::cout << M(row,col) << " ";
+	for(int row = 0; row < this->get_rows(); row++) {
+		for(int col = 0; col < this->get_cols(); col++) {
+			std::cout << this->operator()(row,col) << " ";
 		}
 		std::cout << std::endl;
 	}
@@ -197,65 +195,73 @@ Matrix<T> identity(int n, T val = 1) {
 }
 
 template<class T>
-Matrix<T>* augment(const Matrix<T> &A, const Matrix<T> &B) {
+Matrix<T> augment(const Matrix<T> &A, const Matrix<T> &B) {
 	/*	Produces augmented matrix (A|B) */
 	if(A.get_rows() != B.get_rows()) throw std::exception();
 	int rows = A.get_rows();
 	int colsA = A.get_cols();
 	int colsB = B.get_cols();
-	int row=0, col=0; //dummy vars
 	T val; //dummy vars
-	Matrix<T> *aug = new Matrix<T>; //augmented matrix
-	aug->Matrix(rows,colsA+colsB);
-	for(row=0; row < rows; row++) {
-		for(col=0; col < colsA; col++) {
+	
+	Matrix<T> *aug_p = new Matrix<T>(rows,colsA+colsB); //augmented matrix
+	
+	for(int row=0; row < rows; row++) {
+		for(int col=0; col < colsA; col++) {
 			val = A(row,col);
-			aug.set_element(val,row,col);
+			aug_p->set_element(val,row,col);
 		}
-		for(col=0; col < colsB; col++) {
+		for(int col=0; col < colsB; col++) {
 			val = B(row,col);
-			aug.set_element(val,row,colsA+col);
+			aug_p->set_element(val,row,colsA+col);
 		}
-	}
-	
-	
-	Matrix<T> *ans = new Matrix<T>;
-	*ans = aug;
-	return *ans;
+	}	
+	return *aug_p;
 }	//augment
 
 template<class T>
-Matrix<T> gaussian_elim(Matrix<T> coeffs, Matrix<T> rhs) {
+Matrix<T> gauss_elim(const Matrix<T> &coeffs, const Matrix<T> &rhs) {
 	/*	Solve for x in coeffs*x=rhs.
 	*/
-	int rows = coeffs.get_rows();
-	int cols = coeffs.get_cols();
-	if(rows != cols || rhs.get_cols() != 1 || rhs.get_rows() != rows) throw std::exception();
-	Matrix<T> augm(rows,cols+1); //augmented matrix
+	if(coeffs.get_rows() != coeffs.get_cols() || rhs.get_cols() != 1 || rhs.get_rows() != coeffs.get_rows()) throw std::exception();
 	
-	int row, col; //dummy vars
-	T val; //dummy vars
-	
-	for(row=0; row < rows; row++) {
-		for(col=0; col < cols; col++) {
-			//fill the first row
-			val = coeffs(row,col);
-			augm.set_element(val,row,col);
-		}
-		augm.set_element(rhs(row,0),row,cols);
-	}
-	
-	
-	T factor = coeffs(1,0) / coeffs(0,0);
-	for(col=0; col < cols; col++) {
-		//eliminate the second row
-		val = coeffs(1,col) - factor * coeffs(0,col);
-		augm.set_element(val,1,col);
-	}
-	val = rhs(1,0) - factor * rhs(0,0);
-	augm.set_element(val,1,cols); //augmented part elimination
-	return augm;
+	Matrix<T> aug = augment(coeffs, rhs);
+	int rows = aug.get_rows();
+	int cols = aug.get_cols();
 
-}
+	//forward elimination
+	
+	#define PEEK(info, x) std::cout << info << x << std::endl;
+	T pivot, factor, val;
+	int piv_row = 0; //pivot's row
+	for(int sweep=0; sweep < cols; sweep++) {
+		//sweeps the row searching for pivot (leftmost non-zero term);
+		val = aug(piv_row,sweep);
+		if(val==0) continue;
+		else { pivot = val; pivot_col=sweep; break; }
+	}
+	if(pivot == 0) throw std::exception();
+	PEEK("pivot ", pivot)
+	for(int fwd=0; fwd < rows; fwd++) {
+		PEEK("fwd ", fwd)
+		T factor = aug(fwd, piv_col) / pivot; //TODO if not zero
+		PEEK("factor ", factor)
+		for(int col=0; col < cols; col++) {
+			//update consecutive rows column by column
+			//eliminate with the pivot
+			if(fwd == piv_row) {
+			//normalise the pivot's row
+				val = aug(fwd, col) / pivot;
+				aug.set_element(val, fwd, col);
+			}
+			else {
+				val = aug(fwd, col) - factor * aug(piv_row,col);
+				PEEK("val ", val)
+				aug.set_element(val, fwd, col);
+			}
+		}
+	}
+
+	return aug;
+} //gauss elim
 
 #endif //header guard
