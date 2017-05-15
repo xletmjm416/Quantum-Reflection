@@ -1,10 +1,10 @@
 CC=g++
 CFLAGS=-g -static-libstdc++
 DEPS = 
-OBJ = main.o 
+OBJ = base.o 
 
 %.o: %.cpp $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-main: $(OBJ)
+base: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
