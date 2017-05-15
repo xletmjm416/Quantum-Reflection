@@ -1,20 +1,31 @@
 #include <iostream>
 #include <cmath>
+#include <complex>
 #include "Eigen/Dense"
 
-double sinh(double x) {
+typedef std::complex<double> dcplx;
+
+dcplx sin(dcplx x) {
 	return std::sin(x);
 }
 
-Eigen::VectorXd linspace(double (*func)(double x), double N_steps, double system_size = 1) {
-	/*	Initialises the wavefunction (system vector) from function callback "func"
-	*	func		- function f(x) which defines the wavefunction at t=0;
+Eigen::VectorXd linspace(double N_steps) {
+	/*	Initialises the linearly divided space.
 	*	N_steps		- number of total steps
 	*	system_size	- size of the whole system (in case that pointer arithmetic fails miserably)
 	*/
 	Eigen::VectorXd ans;
-	ans = Eigen::VectorXd::LinSpaced(N_steps, 0, system_size);
-	ans = ans.unaryExpr(std::ptr_fun(func)).eval();
+	ans = Eigen::VectorXd::LinSpaced(N_steps, 0, 1);
+	return ans;
+}
+
+Eigen::VectorXcd map(dcplx (*func)(dcplx x), Eigen::VectorXcd vec) {
+	/*	Maps a vector to a vector to which coefficient-wise function "func" was applied.
+	*	func		- function f(x) which defines the wavefunction at t=0;
+	*	Eigen::VectorXcd vec		- the vector to be mapped
+	*/
+	Eigen::VectorXcd ans;
+	ans = vec.unaryExpr(std::ptr_fun(func));
 	return ans;
 }
 
@@ -34,19 +45,14 @@ Eigen::MatrixXd second_derv(int size) {
 
 int main()
 {
-	Eigen::MatrixXd A(3,3);
-	Eigen::VectorXd B(3);
-	A << 1,2,3,4,6,54,3,7,3;
-	B << 1,2,3;
-	std::cout << A*B << std::endl;
-	
-	Eigen::VectorXd psi = linspace(sin, 10);
+	Eigen::VectorXcd space = linspace(10);
+	Eigen::VectorXcd psi = map(sin,space);
 	std::cout << psi << std::endl;
 	
 	Eigen::MatrixXd TPD = second_derv(10);
 	std::cout << TPD << std::endl;
 	
-	Eigen::MatrixXd multip = TPD*psi;
+	Eigen::MatrixXcd multip = TPD*psi;
 	std::cout << multip << std::endl;
 	char c;
 	std::cin >> c;
