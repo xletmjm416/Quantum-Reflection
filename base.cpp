@@ -1,13 +1,15 @@
 #include <iostream>
 #include <cmath>
 #include <complex>
+#include <fstream>
 #include "Eigen/Dense"
 
 typedef std::complex<double> dcplx;
 const dcplx dcplx_i(0.0,1.0);
 
 dcplx sin(dcplx x) {
-	return std::sin(3.14159*x);
+	if(std::abs(x)>0.5) return std::sin(2*3.14159*x);
+	else return 0;
 }
 
 Eigen::VectorXd linspace(double step_x) {
@@ -55,9 +57,8 @@ Eigen::VectorXcd linear_solver(Eigen::MatrixXcd coefficients, Eigen::MatrixXcd c
 	return ans;
 }
 
-Eigen::VectorXcd step(Eigen::VectorXcd initial, double step_t, Eigen::VectorXcd pot) {
+Eigen::VectorXcd step(Eigen::VectorXcd initial, double step_x, double step_t, Eigen::VectorXcd pot) {
 	//make sure rows of potental match
-	double step_x = 0.1;
 	const double h_bar = 1;
 	const double mass = 1;
 	
@@ -77,32 +78,36 @@ Eigen::VectorXcd step(Eigen::VectorXcd initial, double step_t, Eigen::VectorXcd 
 }
 
 int main() {
-	double step_t = 0.05;
-	double step_x = 0.05;
+	double step_t = 0.01;
+	double step_x = 0.01;
 	const double h_bar = 1;
 	const double mass = 1;
 	
 	Eigen::VectorXcd space = linspace(step_x);
 	Eigen::VectorXcd psi = map(sin,space);
-	std::cout << psi << std::endl; //initial function
 	
 	int N_space = psi.rows(); //number of space points
 	int N_time = (int)(1/step_t); //number of time points
 	
-	Eigen::MatrixXcd pot = Eigen::VectorXcd::Zero(N_space);//to be implemented
+	Eigen::MatrixXcd pot = Eigen::VectorXcd::Zero(N_space);	//to be implemented
 	Eigen::MatrixXcd hamilton = -(h_bar)*(h_bar)/(2*mass*(step_x*step_x)) * second_derv(N_space); //hamiltonian
 	
 	Eigen::MatrixXcd factor_minus = Eigen::MatrixXcd::Identity(N_space,N_space) - (0.5/h_bar * dcplx_i * step_t) * hamilton; //RHS factor
 	Eigen::MatrixXcd factor_plus = Eigen::MatrixXcd::Identity(N_space,N_space) + (0.5/h_bar * dcplx_i * step_t) * hamilton;	//coefficients matrix
 
 	Eigen::VectorXcd next_psi = Eigen::VectorXcd(N_space);
-	Eigen::VectorXcd prob_distr = Eigen::VectorXcd(N_space);
+	Eigen::VectorXd prob_distr = Eigen::VectorXd(N_space);
+	
+	std::ofstream output;
+	output.open("out.csv");
 	for(int t=0; t<N_time;t++) {
-		next_psi = step(psi, step_t, pot);
+		next_psi = step(psi, step_x, step_t, pot);
 		prob_distr = next_psi.cwiseAbs();
-		std::cout << prob_distr << std::endl << std::endl;
+		std::cout << prob_distr.transpose() << std::endl;
+		output << prob_distr.transpose() << std::endl;
 		psi = next_psi;
 	}
+	output.close();
 	char c;
 	std::cin >> c;
 	return 0;
