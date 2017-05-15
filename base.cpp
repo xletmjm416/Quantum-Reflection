@@ -4,17 +4,18 @@
 #include "Eigen/Dense"
 
 typedef std::complex<double> dcplx;
+const dcplx dcplx_i(0.0,1.0);
 
 dcplx sin(dcplx x) {
 	return std::sin(x);
 }
 
-Eigen::VectorXd linspace(double N_steps) {
+Eigen::VectorXd linspace(double step_x) {
 	/*	Initialises the linearly divided space.
-	*	N_steps		- number of total steps
-	*	system_size	- size of the whole system (in case that pointer arithmetic fails miserably)
+	*	step_x		- length of a step
 	*/
 	Eigen::VectorXd ans;
+	int N_steps = (int)(1/step_x);
 	ans = Eigen::VectorXd::LinSpaced(N_steps, 0, 1);
 	return ans;
 }
@@ -43,17 +44,37 @@ Eigen::MatrixXd second_derv(int size) {
 	return ans;
 }
 
-int main()
-{
-	Eigen::VectorXcd space = linspace(10);
+int main() {
+	double step_t = 0.1;
+	double step_x = 0.1;
+	const double h_bar = 1;
+	const double mass = 1;
+	
+	Eigen::VectorXcd space = linspace(step_x);
 	Eigen::VectorXcd psi = map(sin,space);
-	std::cout << psi << std::endl;
+	std::cout << psi << std::endl; //initial function
 	
-	Eigen::MatrixXd TPD = second_derv(10);
-	std::cout << TPD << std::endl;
+	int N_space = psi.rows(); //number of space points
+	int N_time = (int)(1/step_t); //number of time points
 	
+	Eigen::MatrixXcd potential = Eigen::MatrixXcd::Zero(N_space, N_space); //to be implemented
+	Eigen::MatrixXcd hamilton = -(h_bar)*(h_bar)/(2*mass) * second_derv(N_space) + potential; //hamiltonian
+	
+	Eigen::MatrixXcd factor_minus = Eigen::MatrixXcd::Identity(N_space,N_space) - (0.5/h_bar * dcplx_i * step_t) * hamilton; //RHS factor
+	Eigen::MatrixXcd factor_plus = Eigen::MatrixXcd::Identity(N_space,N_space) + (0.5/h_bar * dcplx_i * step_t) * hamilton;	//coefficients matrix
+	
+	Eigen::VectorXcd RHS = factor_minus * psi;
+	
+	std::cout << factor_plus << std::endl << std::endl;
+	std::cout << RHS << std::endl << std::endl;
+	
+	Eigen::VectorXcd next_psi = Eigen::VectorXcd(N_space);
+	next_psi = factor_plus.fullPivLu().solve(RHS);
+	std::cout << next_psi << std::endl << std::endl;
+	/*
 	Eigen::MatrixXcd multip = TPD*psi;
 	std::cout << multip << std::endl;
+	*/
 	char c;
 	std::cin >> c;
 	return 0;
