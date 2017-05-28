@@ -1,10 +1,11 @@
 CC=g++
-CFLAGS=-g -static-libstdc++
-DEPS = 
-OBJ = base.o 
+CFLAGS=-Wall -g -static-libstdc++
 
-%.o: %.cpp $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-base: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS)
+main: main.o QMSystem.o
+	$(CC) $(CFLAGS) -o main main.o QMSystem.o
+	
+QMSystem.o: QMSystem.cpp QMSystem.h
+	$(CC) $(CFLAGS) -c -o QMSystem.o QMSystem.cpp
+	
+main.o: main.cpp QMSystem.h
+	$(CC) $(CFLAGS) -c -o main.o main.cpp
