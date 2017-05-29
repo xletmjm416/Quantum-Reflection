@@ -1,28 +1,12 @@
 #ifndef QMSYSTEM_H
 #define QMSYSTEM_H
 
-#include <iostream>
-#include <cmath>
-#include <complex>
-#include <fstream>
-#include "Eigen/Dense"
-
-#define PI_CONST 3.14159265358979323846
-typedef std::complex<double> dcplx;
-const dcplx dcplx_i(0.0,1.0);
-
-typedef Eigen::MatrixXcd MatrixC; 	// complex matrix
-typedef Eigen::VectorXcd VectorC; 	// complex vector
-typedef Eigen::MatrixXd MatrixR; 	// real matrix
-typedef Eigen::VectorXd VectorR; 	// real vector
+#include "common.h"
 
 namespace utils {
 	VectorR linspace(double step_x, double max);
-	
 	MatrixR three_pt_diff(int size);
-	
 	VectorC linear_solver(MatrixC coefficients, MatrixC rhs);
-	
 	dcplx gauss_state(dcplx, double,  double, double);
 }
 
