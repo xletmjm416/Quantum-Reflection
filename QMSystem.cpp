@@ -41,8 +41,8 @@ namespace utils {
 		dcplx gauss = constant * std::exp(exponent);
 		return gauss;
 	}
-
-}
+		
+} //namespace utils
 
 QMSystem::QMSystem(VectorC initial, VectorR potential, double step_x, double step_t,
 					double h_bar, double mass, int t_size) : 

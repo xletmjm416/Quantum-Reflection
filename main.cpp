@@ -1,8 +1,9 @@
-#include "QMSystem.h"
+#include "main.h"
+
 #define SYSTEM_SIZE 10
 int main() {
+
 	double h_bar=1, mass=1;
-	
 	//data input
 	std::cout << "-------- Properties of space and time --------" << std::endl << std::endl;
 	double step_t, step_x;
@@ -60,6 +61,7 @@ int main() {
 		output << prob_distr.transpose().format(CommaInitFmt) << std::endl;
 	}
 	std::cout << "finished";
+
 	output.close();
 	char c;
 	std::cin >> c;
