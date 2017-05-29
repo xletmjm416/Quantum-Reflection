@@ -44,25 +44,28 @@ int main() {
 	
 	//system init
 	QMSystem system(psi, pot, step_x, step_t, h_bar, mass, 1);
-
+	
 	//std::cout << system.get_state().cwiseAbs2() << std::endl;
 
 	//output init
-	std::ofstream output;
-	output.open("out.csv");
-	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "", ""); //copied from reference
+	std::ofstream output_x, output_p;
+	output_x.open("out-space.csv");
+	output_p.open("out-momentum.csv");
+	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ";", "", "", "", "", ""); //copied from reference
 	
-	VectorR prob_distr = psi.cwiseAbs2();
-	output << prob_distr.transpose() << std::endl;
-	for(int t=0; t<10;t++) {
+	output_x << psi.transpose().format(CommaInitFmt) << std::endl;
+	VectorC psi_momentum = FFT::FFT(psi);
+	output_p << psi_momentum.transpose().format(CommaInitFmt) << std::endl;
+	for(int t=0; t<10*N_time;t++) {
 		psi = system.cranknicolson();
-		prob_distr = psi.cwiseAbs2();
-		//std::cout << prob_distr.transpose() << std::endl;
-		output << prob_distr.transpose().format(CommaInitFmt) << std::endl;
+		output_x << psi.transpose().format(CommaInitFmt) << std::endl;
+		psi_momentum = FFT::FFT(psi);
+		output_p << psi_momentum.transpose().format(CommaInitFmt) << std::endl;
 	}
-	std::cout << "finished";
+	std::cout << "Data generation finished. Input anything and press enter to exit...";
 
-	output.close();
+	output_x.close();
+	output_p.close();
 	char c;
 	std::cin >> c;
 	return 0;
