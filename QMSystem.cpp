@@ -35,9 +35,10 @@ namespace utils {
 		return ans;
 	}
 	
-	dcplx gauss_state(dcplx x, double k,  double mean, double stddev) {
-		dcplx exponent = dcplx_i * k * x - 0.5 * std::pow( (x - mean) / stddev , 2 );
-		dcplx constant = 1/(stddev*std::pow(2*PI_CONST,0.5));
+	dcplx gauss_state(dcplx x, double k,  double mean, double spread) {
+		double a = 1/(4*spread*spread); //exp(-kx - a x^2)
+		dcplx exponent = dcplx_i * k * (x-mean) - a*(x-mean)*(x-mean);
+		dcplx constant(std::pow(2*a/PI_CONST,0.25),0); //constant of normalisation = 4th_root(2a/pi)
 		dcplx gauss = constant * std::exp(exponent);
 		return gauss;
 	}
@@ -45,13 +46,12 @@ namespace utils {
 } //namespace utils
 
 QMSystem::QMSystem(VectorC initial, VectorR potential, double step_x, double step_t,
-					double h_bar, double mass, int t_size) : 
-					h_bar(h_bar), mass(mass), step_x(step_x), step_t(step_t), t_size(t_size) {
+					double h_bar, double mass) : 
+					h_bar(h_bar), mass(mass), step_x(step_x), step_t(step_t) {
 			this->N_space = initial.rows();
-			this->x_size = N_space*step_x;
-			this->N_time = (int)t_size/step_t;
+			this->N_time = (int)TIME_SIZE/step_t;
 			this->wavefunction = initial;
-			if(potential.rows() != initial.rows())throw;
+			if(potential.rows() != initial.rows()) throw;
 			this->potential = potential;
 			this->hamilton = hamiltonian(potential);
 }
@@ -62,6 +62,7 @@ MatrixC QMSystem::hamiltonian(VectorR pot) {
 	MatrixC ans = constant * utils::three_pt_diff(N_space); 	// second derivative part
 	std::cout << ans.rows() << " " << ans.cols() << " " << pot.rows() << std::endl;
 	ans += pot.asDiagonal(); 					// add potential
+	OUTPUT("Hamiltonian: ", std::endl << ans.block(0,0,3,3));
 	return ans;
 }
 
@@ -78,20 +79,3 @@ VectorC QMSystem::cranknicolson() {
 	this->wavefunction = ans;
 	return ans;
 }
-
-dcplx sin_state(dcplx x) {
-	//if(std::abs(x)>0.9) return dcplx(1e100,0);
-	if(std::abs(x)>0.4 && std::abs(x)<0.6) return std::sin(PI_CONST/0.2*(x-0.4));
-	else return 0;
-}
-/*
-dcplx gauss_state(dcplx x) {
-	double mean = 5;
-	double stddev = 1;
-	double k = 10000;
-	dcplx exponent = dcplx_i * k * x - 0.5 * std::pow( (x - mean) / stddev , 2 );
-	dcplx constant = 1/(stddev*std::pow(2*PI_CONST,0.5));
-	dcplx gauss = constant * std::exp(exponent);
-	return gauss;
-}
-*/

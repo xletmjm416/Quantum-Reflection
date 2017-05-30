@@ -16,4 +16,10 @@ typedef Eigen::VectorXcd VectorC; 	// complex vector
 typedef Eigen::MatrixXd MatrixR; 	// real matrix
 typedef Eigen::VectorXd VectorR; 	// real vector
 
+#define INPUT(msg,var) std::cout << msg; std::cin >> var
+#define OUTPUT(msg,var) std::cout << msg << var << std::endl
+
+#define SYSTEM_SIZE 1
+#define TIME_SIZE 1
+
 #endif

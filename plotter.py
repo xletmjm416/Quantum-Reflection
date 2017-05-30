@@ -5,6 +5,7 @@ Created on Mon May 29 21:58:43 2017
 @author: mjm416
 """
 import numpy as np
+from scipy import stats
 from matplotlib import pyplot as plt
 def str2complex(str):
     import re
@@ -32,15 +33,22 @@ filename = raw_input("Name of the file to analyse: ")
 f = open(filename, 'r+')
 data = f.readline()
 data = np.array(parse_complex(data))
-x = np.linspace(0,10,128)
-plt.plot(x,np.real(data), 'r-')
 
-for i in range(50):
+x = np.linspace(0,1,32)
+amplitude = np.abs(data)**2
+plt.plot(x, amplitude, 'r-')
+print "position ", np.average(x, weights=amplitude)
+print "spread ", np.std(amplitude)
+
+for i in range(3):
     data = f.readline()
     
 data = np.array(parse_complex(data))
-x = np.linspace(0,10,128)
-plt.plot(x,np.real(data), 'b-')
 
+x = np.linspace(0,1,32)
+amplitude = np.abs(data)**2
+plt.plot(x, amplitude, 'r-')
+print "position ", np.average(x, weights=amplitude)
+print "spread ", np.std(amplitude)
 
 f.close()

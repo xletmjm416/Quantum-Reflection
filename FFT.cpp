@@ -1,7 +1,8 @@
 #include "FFT.h"
 
 namespace FFT {
-
+	// From Numerical Recipes in C++, 2nd ed. p. 513
+	
 	unsigned int bitrev(unsigned int n, unsigned int bits) {
 		// from http://www.katjaas.nl/bitreversal/bitreversal.html
 		unsigned int nrev, N;
@@ -47,6 +48,7 @@ namespace FFT {
 	
 	VectorC FFT(VectorC sample) {
 		/* sample is of size N = 2^n */
+		
 		int N = sample.rows();
 		VectorC rev(N);
 		rev = sample;
@@ -61,7 +63,7 @@ namespace FFT {
 				rev(reversed) = sample(i);
 			}
 		}
-		// From Numerical Recipes in C++, 2nd ed. p. 513:
+		
 		VectorC ans(N);
 		for(int j=0; j<N; j++) {
 			ans(j) = kth_elem(rev,j);
