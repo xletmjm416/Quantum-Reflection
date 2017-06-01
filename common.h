@@ -19,7 +19,7 @@ typedef Eigen::VectorXd VectorR; 	// real vector
 #define INPUT(msg,var) std::cout << msg; std::cin >> var
 #define OUTPUT(msg,var) std::cout << msg << var << std::endl
 
-#define SYSTEM_SIZE 1
-#define TIME_SIZE 1
+#define SYSTEM_SIZE 100
+#define TIME_SIZE 100
 
 #endif

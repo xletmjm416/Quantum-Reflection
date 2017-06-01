@@ -7,7 +7,7 @@ namespace utils {
 		*/
 		VectorR ans;
 		int N_steps = (int)(max/step_x);
-		ans = VectorR::LinSpaced(N_steps, 0, max);
+		ans = VectorR::LinSpaced(N_steps, 0, max-step_x);
 		return ans;
 	}
 	
@@ -36,22 +36,24 @@ namespace utils {
 	}
 	
 	dcplx gauss_state(dcplx x, double k,  double mean, double spread) {
-		double a = 1/(4*spread*spread); //exp(-kx - a x^2)
-		dcplx exponent = dcplx_i * k * (x-mean) - a*(x-mean)*(x-mean);
-		dcplx constant(std::pow(2*a/PI_CONST,0.25),0); //constant of normalisation = 4th_root(2a/pi)
-		dcplx gauss = constant * std::exp(exponent);
+		double a = 1.0/(4*spread*spread);
+		dcplx exponent_1(dcplx_i * k * x ); //ikx
+		dcplx exponent_2 = -1.0*a*(x-mean)*(x-mean); //-ax^2
+		dcplx constant=std::pow(2.0*a/PI_CONST,0.25); //constant of normalisation = 4th_root(2a/pi)
+		dcplx gauss = constant * std::exp(exponent_1+exponent_2);
 		return gauss;
 	}
 		
 } //namespace utils
 
 QMSystem::QMSystem(VectorC initial, VectorR potential, double step_x, double step_t,
-					double h_bar, double mass) : 
-					h_bar(h_bar), mass(mass), step_x(step_x), step_t(step_t) {
+					double h_bar, double mass, double x_size, double t_size) : 
+					h_bar(h_bar), mass(mass), step_x(step_x), step_t(step_t),
+					x_size(x_size), t_size(t_size) {
 			this->N_space = initial.rows();
-			this->N_time = (int)TIME_SIZE/step_t;
+			this->N_time = (int)t_size/step_t;
 			this->wavefunction = initial;
-			if(potential.rows() != initial.rows()) throw;
+			if(potential.rows() != initial.rows()) throw; //dimensions mismatch
 			this->potential = potential;
 			this->hamilton = hamiltonian(potential);
 }
@@ -60,9 +62,8 @@ MatrixC QMSystem::hamiltonian(VectorR pot) {
 	/*	Updates the hamiltonian of the system	*/
 	double constant = -(h_bar)*(h_bar)/(2*mass*(step_x*step_x));
 	MatrixC ans = constant * utils::three_pt_diff(N_space); 	// second derivative part
-	std::cout << ans.rows() << " " << ans.cols() << " " << pot.rows() << std::endl;
 	ans += pot.asDiagonal(); 					// add potential
-	OUTPUT("Hamiltonian: ", std::endl << ans.block(0,0,3,3));
+	OUTPUT("Peek on Hamiltonian: ", std::endl << ans.block(0,0,5,5));
 	return ans;
 }
 
