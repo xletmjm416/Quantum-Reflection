@@ -18,12 +18,11 @@ class QMSystem {
 	step t
 	number of steps x
 	number of steps t
-	system size
 	h bar
 	mass
 	*/
 	public:
-		QMSystem(VectorC, VectorR, double, double, double h_bar = 1, double mass = 1);
+		QMSystem(VectorC, VectorR, double, double, double h_bar, double mass, double x_size, double t_size);
 		MatrixC hamiltonian(VectorR);
 		VectorC cranknicolson();
 		VectorC get_state() { return wavefunction; }
@@ -37,6 +36,7 @@ class QMSystem {
 		// computational
 		double step_x, step_t;		// discretisation parameters
 		int N_space, N_time;	// number of discrete steps
+		double x_size, t_size;
 };
 
 #endif

@@ -22,26 +22,25 @@ int main() {
 	VectorC psi(N_space);
 
 	std::cout << std::endl << "-------- Initial parameters of Gaussian wavepacket --------" << std::endl << std::endl;
-	double momentum, initial_pos, spread;
+	double initial_pos, wavenumber, spread;
 	INPUT("Initial position: ", initial_pos);
 	INPUT("Initial spread: ", spread);
-	INPUT("Initial momentum: ", momentum);
+	INPUT("Initial wavenumber: ", wavenumber);
 	
 	for(int i=0; i<N_space; i++) {
-		dcplx val = utils::gauss_state(space(i), momentum, initial_pos, spread);
+		dcplx val = utils::gauss_state(space(i), wavenumber, initial_pos, spread);
 		psi(i) = val;
 	}
 	
-	OUTPUT("Velocity: ", h_bar*momentum/mass);
-	OUTPUT("Maximal free particle time window: ", h_bar*momentum/mass);
+	OUTPUT("Momentum: ", h_bar*wavenumber);
+	OUTPUT("Velocity: ", h_bar*wavenumber/mass);
 	
-	std::cout << "-------- Potential function --------" << std::endl << std::endl;
+	std::cout << std::endl << "-------- Potential function --------" << std::endl << std::endl;
 	OUTPUT("Not yet implemented... ", " Sorry");
 	VectorR pot = VectorR::Zero(N_space);
 
-	
 	//system init
-	QMSystem system(psi, pot, step_x, step_t, h_bar, mass);
+	QMSystem system(psi, pot, step_x, step_t, h_bar, mass, SYSTEM_SIZE, TIME_SIZE);
 	
 	//std::cout << system.get_state().cwiseAbs2() << std::endl;
 
@@ -51,16 +50,18 @@ int main() {
 	output_p.open("out-momentum.csv");
 	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ";", "", "", "", "", ""); //copied from reference
 	
+	output_x << step_x << "," << step_t << "," << SYSTEM_SIZE << "," << TIME_SIZE << "," << initial_pos << "," << wavenumber << "," << spread << std::endl;
+	output_p << step_x << "," << step_t << "," << SYSTEM_SIZE << "," << TIME_SIZE << "," << initial_pos << "," << wavenumber << "," << spread << std::endl;
 	output_x << psi.transpose().format(CommaInitFmt) << std::endl;
 	VectorC psi_momentum = FFT::FFT(psi);
 	output_p << psi_momentum.transpose().format(CommaInitFmt) << std::endl;
-	for(int t=0; t<N_time;t++) {
+	for(int t=0; t<N_time-1;t++) {
 		psi = system.cranknicolson();
 		output_x << psi.transpose().format(CommaInitFmt) << std::endl;
 		psi_momentum = FFT::FFT(psi);
 		output_p << psi_momentum.transpose().format(CommaInitFmt) << std::endl;
 	}
-	std::cout << "Data generation finished. Input anything and press enter to exit...";
+	std::cout << "Data generation finished. Input anything and press enter to exit... ";
 
 	output_x.close();
 	output_p.close();
