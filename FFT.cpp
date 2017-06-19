@@ -71,4 +71,45 @@ namespace FFT {
 		return ans;
 	} //FFT
 
+	VectorC DITFFT(VectorC sample) {
+		int N = sample.rows();
+		VectorC ans(N);
+		ans = sample;
+		
+		if((N & (N-1)) != 0) throw; //sample size is not a power of two
+		int power = (int)(std::log(N)/std::log(2));
+		
+		//shuffle to get bit-reversed order
+		for(int i = 0; i<N; i++) {
+			int reversed = bitrev(i,power);	
+			if(i != reversed){
+				ans(i) = sample(reversed);
+				ans(reversed) = sample(i);
+			}
+		}
+		
+		// DIT FFT
+		int step = 0;
+		int elems = 1;
+		
+		for (int i=0; i < power; i++) {
+			step = elems;
+			elems *=2;	//increase number of elements taken every step
+			
+			for (int j=0; j < step; j++) {
+				double theta = 2*PI_CONST/elems*j;
+				dcplx twiddle = std::exp(theta); //twiddle factor
+				
+				for (int k=j; k < N; k += elems) {
+					//butterfly
+					dcplx temp = twiddle * ans(k+step);
+					
+					ans(k+step) = ans(k) - temp;					
+					ans(k) = ans(k) + temp;
+				}
+			}
+		}
+											  
+		return ans;
+	}
 } //namespace FFT

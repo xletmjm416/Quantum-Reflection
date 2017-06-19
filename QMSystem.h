@@ -7,7 +7,11 @@ namespace utils {
 	VectorR linspace(double step_x, double max);
 	MatrixR three_pt_diff(int size);
 	VectorC linear_solver(MatrixC coefficients, MatrixC rhs);
-	dcplx gauss_state(dcplx, double,  double, double);
+	dcplx gauss_function(dcplx, double,  double, double);
+	VectorC thomas_solver(MatrixC, VectorC);
+	dcplx linear_function(dcplx, double,  double, double);
+	dcplx heaviside_function(dcplx, double, double, short);
+	dcplx step_function(dcplx, double, double);
 }
 
 class QMSystem {

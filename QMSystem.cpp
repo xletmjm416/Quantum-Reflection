@@ -35,13 +35,65 @@ namespace utils {
 		return ans;
 	}
 	
-	dcplx gauss_state(dcplx x, double k,  double mean, double spread) {
-		double a = 1.0/(4*spread*spread);
+	VectorC thomas_solver(MatrixC coefficients, VectorC rhs) {
+		// from wikipedia https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
+		int i=0, N=rhs.rows();
+		if(coefficients.rows() != N) throw;
+		dcplx temp;
+		VectorC ans(N);
+		
+		//first step
+		i = 0;
+		coefficients(i,i+1) = coefficients(i,i+1)/coefficients(i,i); //c* = c/b
+		rhs(i) = rhs(i)/coefficients(i,i); //d* = d/b
+		
+		// forward propagation
+		for(i=1;i<(N-1);i++) {
+			coefficients(i,i+1) = coefficients(i,i+1)/(coefficients(i,i) - coefficients(i,i-1) * coefficients(i-1,i)); //c* = c/(b - a . c_(i-1)* )
+			
+			rhs(i) = (rhs(i) - coefficients(i,i-1)*rhs(i-1)) / (coefficients(i,i) - coefficients(i,i-1)*coefficients(i-1,i)); // d* = [ d - a * d_(i-1)* ] / [ b - a * c_(i-1)* ]
+		}
+		i = N-1;
+		rhs(i) = (rhs(i)-coefficients(i,i-1)*rhs(i-1))/(coefficients(i,i)-coefficients(i,i-1)*coefficients(i-1,i));
+		
+		//back substitution
+		ans(i) = rhs(i); //i == N-1 at this point
+		for(i=(N-2);i>=0;i--) {
+			ans(i) = rhs(i) - coefficients(i,i+1)*ans(i+1); //x = d* - c* . x_i+1
+		}
+		
+		return ans;
+	}
+	
+	dcplx gauss_function(dcplx x, double k,  double mean, double spread) {
 		dcplx exponent_1(dcplx_i * k * x ); //ikx
-		dcplx exponent_2 = -1.0*a*(x-mean)*(x-mean); //-ax^2
-		dcplx constant=std::pow(2.0*a/PI_CONST,0.25); //constant of normalisation = 4th_root(2a/pi)
+		dcplx exponent_2 = -1.0*(x-mean)*(x-mean)/(4*spread*spread); //-ax^2
+		dcplx constant=std::pow(1/(2*PI_CONST*spread*spread),0.25); //constant of normalisation = 4th_root(1/(2pi sigma^2))
 		dcplx gauss = constant * std::exp(exponent_1+exponent_2);
 		return gauss;
+	}
+	
+	dcplx linear_function(dcplx x, double stretch,  double translation, double offset) {
+		dcplx ans = stretch*(x-offset)+translation;
+		return ans;
+	}
+	
+	dcplx heaviside_function(dcplx x, double centre, double height, short orient) {
+		if(orient == 0) {
+			if(x.real() <= centre) return dcplx(height,0);
+			if(x.real() > centre) return dcplx(0,0);
+		}
+		else {
+			if(x.real() >= centre) return dcplx(height,0);
+			if(x.real() < centre) return dcplx(0,0);
+		}
+		return dcplx(0,0);
+	}
+	
+	dcplx step_function(dcplx x, double pos, double width) {
+		double height = 1/width;
+		if(std::abs(x) > pos+width/2 || std::abs(x) < pos-width/2) return 0;
+		else return height;
 	}
 		
 } //namespace utils
@@ -75,7 +127,7 @@ VectorC QMSystem::cranknicolson() {
 
 	VectorC ans(N_space), rhs(N_space);
 	rhs = factor_minus*wavefunction;
-	ans = utils::linear_solver(factor_plus, rhs); //solve implicit scheme
+	ans = utils::thomas_solver(factor_plus, rhs); //solve implicit scheme
 
 	this->wavefunction = ans;
 	return ans;

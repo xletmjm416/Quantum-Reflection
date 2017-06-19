@@ -7,6 +7,7 @@ namespace FFT {
 	VectorC collect(VectorC, dcplx, int);
 	dcplx kth_elem(VectorC, int);
 	VectorC FFT(VectorC);
+	VectorC DITFFT(VectorC);
 }
 
 #endif
